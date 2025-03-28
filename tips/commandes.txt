@@ -1,0 +1,31 @@
+Commandes pour avoir le token : 
+
+curl --location --request POST 'http://localhost:8080/realms/NestBlog/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'client_id=nestblog-backend' \
+--data-urlencode 'client_secret=peCGb3FZtMUm7bU7As0OPbkXNY98r2hT' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'username=john.doe' \
+--data-urlencode 'password=password123'
+
+
+Commande pour avoir accès à une page avec le token :
+
+curl http://localhost:3000/protected \
+  -H "Authorization: Bearer TOKEN"
+
+Quelques commande docker
+
+docker compose up -d
+docker compose down -v
+
+
+Commande pour extraire un realms
+
+docker exec -it nestblog-keycloak /opt/keycloak/bin/kc.sh export --dir /opt/keycloak/data/import --realm NestBlog --users realm_file
+
+
+Commande pour copier le realm en local
+
+docker cp nestblog-keycloak:/opt/keycloak/data/import/NestBlog-realm.json ./keycloak/realms/NestBlog-realm.json
+
