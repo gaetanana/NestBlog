@@ -10,6 +10,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { PrismaModule } from './prisma/prisma.module';
       secret: 'peCGb3FZtMUm7bU7As0OPbkXNY98r2hT',
       bearerOnly: true,                         
       logLevels: ['verbose'],
-    })
+    }), UsersModule, AuthModule
   ],
   controllers: [AppController],
   providers: [
