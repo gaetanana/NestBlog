@@ -11,5 +11,4 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         await this.$disconnect();
     }
 }
-// This service extends the PrismaClient class and implements the OnModuleInit and OnModuleDestroy interfaces.
 

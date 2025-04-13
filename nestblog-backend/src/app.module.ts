@@ -16,7 +16,7 @@ import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     PrismaModule,
-    ConfigModule.forRoot(), 
+    ConfigModule.forRoot({ isGlobal: true }), 
     KeycloakConnectModule.register({
       authServerUrl: 'http://localhost:8080',   
       realm: 'NestBlog',

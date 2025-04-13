@@ -1,13 +1,17 @@
 {
-    "name": "nestblog",
-    "private": true,
-    "workspaces": ["nestblog-frontend", "nestblog-backend"],
-    "scripts": {
-      "install:all": "npm install",
-      "dev": "concurrently \"npm run start --workspace nestblog-backend\" \"npm run start --workspace nestblog-frontend\""
-    },
-    "devDependencies": {
-      "concurrently": "^8.0.0"
-    }
+  "name": "nestblog-monorepo",
+  "private": true,
+  "workspaces": [
+    "nestblog-frontend",
+    "nestblog-backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run start --workspace nestblog-backend\" \"npm run start --workspace nestblog-frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "ldapjs": "^3.0.7"
   }
-  
+}
