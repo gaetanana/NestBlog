@@ -1,117 +1,118 @@
 // src/users/users.service.ts
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto } from './create-user.dto';
-import { UpdateUserDto } from './update-user.dto';
 import { User } from '@prisma/client';
-import * as ldap from 'ldapjs';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
-  private ldapClient: ldap.Client;
-
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
-  ) {
-    this.ldapClient = ldap.createClient({
-      url: this.config.get<string>('LDAP_URL'),
+  ) {}
+
+  /**
+   * Trouve ou crée un utilisateur basé sur les informations Keycloak
+   */
+  async findOrCreateFromKeycloak(payload: any): Promise<User> {
+    if (!payload || !payload.preferred_username) {
+      throw new Error('Invalid Keycloak payload');
+    }
+
+    const keycloakId = payload.sub;
+    const username = payload.preferred_username;
+
+    // Recherche d'abord par username (constant)
+    let user = await this.prisma.user.findUnique({ where: { username } });
+
+    if (user) {
+      // Si trouvé, mettre à jour l'ID pour correspondre au nouveau ID Keycloak
+      if (user.id !== keycloakId) {
+        console.log(
+          `Updating user ID for ${username} from ${user.id} to ${keycloakId}`,
+        );
+        user = await this.prisma.user.update({
+          where: { username },
+          data: { id: keycloakId },
+        });
+      }
+      return user;
+    }
+
+    // Si non trouvé, créer l'utilisateur
+    console.log(`Creating new user from Keycloak: ${username}`);
+    return this.prisma.user.create({
+      data: {
+        id: keycloakId,
+        username: username,
+        email: payload.email,
+        name:
+          payload.name || `${payload.given_name} ${payload.family_name}`.trim(),
+        password: '',
+      },
     });
   }
-
-  private getUserDN(username: string) {
-    return `uid=${username},${process.env.LDAP_BASE_DN}`;
-  }
-
-  async create(data: CreateUserDto): Promise<User> {
-    const user = await this.prisma.user.create({ data });
-
-    const entry = {
-      cn: data.name || data.username,
-      sn: data.name || data.username,
-      uid: data.username,
-      mail: data.email,
-      objectClass: ['inetOrgPerson', 'organizationalPerson', 'person', 'top'],
-      userPassword: data.password,
-    };
-
-    return new Promise((resolve, reject) => {
-      this.ldapClient.add(this.getUserDN(data.username), entry, (err) => {
-        if (err) {
-          console.error('LDAP create error:', err);
-          return reject(new InternalServerErrorException('LDAP user creation failed'));
-        }
-        resolve(user);
-      });
-    });
-  }
-
+  /**
+   * Récupère tous les utilisateurs (pour les administrateurs)
+   */
   async findAll(): Promise<User[]> {
     return this.prisma.user.findMany();
   }
 
+  /**
+   * Récupère un utilisateur par son ID
+   */
   async findOne(id: string): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
-  async findOrCreateFromKeycloak(payload: any): Promise<User> {
-    const id = payload.sub;
-
-    let user = await this.prisma.user.findUnique({ where: { id } });
-
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          id: payload.sub,
-          username: payload.preferred_username,
-          email: payload.email,
-          name: payload.name,
-          password: '', // car on utilise LDAP
-        },
-      });
-    }
-
-    return user;
-  }
-
-  async update(id: string, data: UpdateUserDto): Promise<User> {
-    const user = await this.findOne(id);
-    const updated = await this.prisma.user.update({ where: { id }, data });
-
-    const changes: ldap.Change[] = [];
-    if (data.email)
-      changes.push(new ldap.Change({ operation: 'replace', modification: { mail: data.email } }));
-    if (data.password)
-      changes.push(new ldap.Change({ operation: 'replace', modification: { userPassword: data.password } }));
-    if (data.username)
-      changes.push(new ldap.Change({ operation: 'replace', modification: { uid: data.username } }));
-
-    return new Promise((resolve, reject) => {
-      this.ldapClient.modify(this.getUserDN(user.username), changes, (err) => {
-        if (err) {
-          console.error('LDAP update error:', err);
-          return reject(new InternalServerErrorException('LDAP user update failed'));
-        }
-        resolve(updated);
-      });
+  /**
+   * Met à jour les données spécifiques à l'application d'un utilisateur
+   * Note: Ce n'est pas une mise à jour d'identité, qui serait gérée par Keycloak/LDAP
+   */
+  async updateAppData(id: string, data: { [key: string]: any }): Promise<User> {
+    // Vérifier si l'utilisateur existe
+    const userExists = await this.prisma.user.findUnique({ where: { id } });
+    if (!userExists) throw new NotFoundException('User not found');
+  
+    // Ne permettre la mise à jour que des champs spécifiques à l'application
+    // Exclure explicitement les champs liés à l'identité et les champs qui ne font pas partie du modèle
+    const { username, email, password, roles, ...appData } = data;
+  
+    return this.prisma.user.update({
+      where: { id },
+      data: appData,
     });
   }
 
-  async remove(id: string): Promise<User> {
-    const user = await this.findOne(id);
-    const deleted = await this.prisma.user.delete({ where: { id } });
+  /**
+   * Supprime un utilisateur de la base de données de l'application
+   * Note: Cela ne supprime pas l'utilisateur de Keycloak/LDAP
+   */
+  async removeFromApp(id: string): Promise<User> {
+    // Vérifier si l'utilisateur existe
+    const userExists = await this.prisma.user.findUnique({ where: { id } });
+    if (!userExists) throw new NotFoundException('User not found');
 
-    return new Promise((resolve, reject) => {
-      this.ldapClient.del(this.getUserDN(user.username), (err) => {
-        if (err) {
-          console.error('LDAP delete error:', err);
-          return reject(new InternalServerErrorException('LDAP user deletion failed'));
-        }
-        resolve(deleted);
-      });
-    });
+    return this.prisma.user.delete({ where: { id } });
+  }
+
+  /**
+   * Récupère l'utilisateur actuel avec ses données complètes (pour profil utilisateur)
+   */
+  async getCurrentUserProfile(keycloakPayload: any): Promise<any> {
+    const user = await this.findOrCreateFromKeycloak(keycloakPayload);
+
+    // Ici, vous pouvez enrichir l'utilisateur avec des données supplémentaires
+    // spécifiques à votre application
+    const userData = {
+      ...user,
+      roles: keycloakPayload.realm_access?.roles || [],
+      // Autres données spécifiques à l'application
+    };
+
+    return userData;
   }
 }

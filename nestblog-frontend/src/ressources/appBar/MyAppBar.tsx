@@ -1,4 +1,3 @@
-// src/ressources/appBar/MyAppBar.tsx
 import { AppBar, UserMenu, MenuItemLink, Logout } from 'react-admin';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { useEffect, useState } from 'react';
@@ -28,7 +27,7 @@ const MyUserMenu = (props: any) => {
                     leftIcon={<AccountCircle />}
                 />
             )}
-            <Logout /> {/* 👈 Ce bouton est essentiel */}
+            <Logout />
         </UserMenu>
     );
 };

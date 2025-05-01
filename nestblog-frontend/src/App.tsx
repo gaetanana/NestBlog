@@ -7,12 +7,14 @@ import { UserShow } from './ressources/users/UserShow';
 import authProvider from './authProvider';
 import { dataProvider } from './dataProvider';
 import { MyAppBar } from './ressources/appBar/MyAppBar';
+import LoginPage from './components/Login';
 
 export const App = () => (
   <Admin
     authProvider={authProvider}
     dataProvider={dataProvider}
     layout={(props) => <Layout {...props} appBar={MyAppBar} />}
+    loginPage={LoginPage}
   >
     <Resource
       name="users"
