@@ -1,82 +1,128 @@
 // src/dataProvider.ts
-import { DataProvider } from 'react-admin';
+import { DataProvider } from "react-admin";
 
-const apiUrl = 'http://localhost:3000';
+const apiUrl = "http://localhost:3000";
 
 const getAuthHeader = () => {
-    const auth = localStorage.getItem('auth');
-    if (!auth) throw new Error('No access token');
-    const { accessToken } = JSON.parse(auth); // 👈 important : camelCase
-    return {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-    };
+  const auth = localStorage.getItem("auth");
+  if (!auth) throw new Error("No access token");
+  const { accessToken } = JSON.parse(auth); // 👈 important : camelCase
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  };
 };
 
 export const dataProvider: DataProvider = {
-    getList: async (resource) => {
-        const res = await fetch(`${apiUrl}/${resource}`, {
-            headers: getAuthHeader(),
-        });
-        const data = await res.json();
+  getList: async (resource) => {
+    const res = await fetch(`${apiUrl}/${resource}`, {
+      headers: getAuthHeader(),
+    });
+    const data = await res.json();
 
-        return {
-            data,
-            total: data.length,
-        };
-    },
+    return {
+      data,
+      total: data.length,
+    };
+  },
 
-    getOne: async (resource, params) => {
-        const res = await fetch(`${apiUrl}/${resource}/${params.id}`, {
-            headers: getAuthHeader(),
-        });
+  getOne: async (resource, params) => {
+    const res = await fetch(`${apiUrl}/${resource}/${params.id}`, {
+      headers: getAuthHeader(),
+    });
 
-        if (res.status === 401) {
-            console.error('Unauthorized when accessing getOne for', resource, params.id);
-            throw new Error('Unauthorized');
-        }
+    if (res.status === 401) {
+      console.error(
+        "Unauthorized when accessing getOne for",
+        resource,
+        params.id
+      );
+      throw new Error("Unauthorized");
+    }
 
-        const data = await res.json();
+    const data = await res.json();
 
-        if (!data.id) {
-            console.error('Invalid response: missing `id` key:', data);
-            throw new Error('The response must include an `id` field');
-        }
+    if (!data.id) {
+      console.error("Invalid response: missing `id` key:", data);
+      throw new Error("The response must include an `id` field");
+    }
 
-        return { data };
-    },
+    return { data };
+  },
 
-    create: async (resource, params) => {
-        const res = await fetch(`${apiUrl}/${resource}`, {
-            method: 'POST',
-            headers: getAuthHeader(),
-            body: JSON.stringify(params.data),
-        });
-        const data = await res.json();
-        return { data };
-    },
+  create: async (resource, params) => {
+    const res = await fetch(`${apiUrl}/${resource}`, {
+      method: "POST",
+      headers: getAuthHeader(),
+      body: JSON.stringify(params.data),
+    });
+    const data = await res.json();
+    return { data };
+  },
 
-    update: async (resource, params) => {
-        const res = await fetch(`${apiUrl}/${resource}/${params.id}`, {
-            method: 'PATCH',
-            headers: getAuthHeader(),
-            body: JSON.stringify(params.data),
-        });
-        const data = await res.json();
-        return { data };
-    },
+  update: async (resource, params) => {
+    const res = await fetch(`${apiUrl}/${resource}/${params.id}`, {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify(params.data),
+    });
+    const data = await res.json();
+    return { data };
+  },
 
-    delete: async (resource, params) => {
-        const res = await fetch(`${apiUrl}/${resource}/${params.id}`, {
-            method: 'DELETE',
-            headers: getAuthHeader(),
-        });
-        const data = await res.json();
-        return { data };
-    },
+  delete: async (resource, params) => {
+    const res = await fetch(`${apiUrl}/${resource}/${params.id}`, {
+      method: "DELETE",
+      headers: getAuthHeader(),
+    });
+    const data = await res.json();
+    return { data };
+  },
 
-    getMany: async () => Promise.resolve({ data: [] }),
-    getManyReference: async () => Promise.resolve({ data: [], total: 0 }),
-    updateMany: async () => Promise.resolve({ data: [] }),
-    deleteMany: async () => Promise.resolve({ data: [] }),
+  getMany: async () => Promise.resolve({ data: [] }),
+  getManyReference: async () => Promise.resolve({ data: [], total: 0 }),
+  updateMany: async () => Promise.resolve({ data: [] }),
+  deleteMany: async () => Promise.resolve({ data: [] }),
+
+  updateUserIdentity: async (userId: any, data: any) => {
+    try {
+      const res = await fetch(`${apiUrl}/users/${userId}/identity`, {
+        method: "PATCH",
+        headers: getAuthHeader(),
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to update user identity");
+      }
+
+      const responseData = await res.json();
+      return { data: responseData };
+    } catch (error) {
+      console.error("Error updating user identity:", error);
+      throw error;
+    }
+  },
+
+  changeUserPassword: async (userId: any, password: any) => {
+    try {
+      const res = await fetch(`${apiUrl}/users/${userId}/password`, {
+        method: "PATCH",
+        headers: getAuthHeader(),
+        body: JSON.stringify({ password }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to change password");
+      }
+
+      const responseData = await res.json();
+      return { data: responseData };
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  },
 };
