@@ -58,8 +58,8 @@ const LoginPage = () => {
                     <Box sx={{ textAlign: 'center', mt: 2 }}>
                         <Typography variant="body2">
                             Don't have an account?{' '}
-                            <Link href="#/register" underline="hover">
-                                Register here
+                            <Link href="#/request-account" underline="hover">
+                                Request access
                             </Link>
                         </Typography>
                     </Box>

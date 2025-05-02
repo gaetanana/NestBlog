@@ -1,21 +1,19 @@
-// src/auth/RegisterPage.tsx - Fixed version
+// src/auth/RequestAccountPage.tsx
 import React, { useState } from 'react';
-import { useNotify, useRedirect } from 'react-admin';
+import { useNotify } from 'react-admin';
 import { TextField, Button, Typography, Container, Box, Paper, Link } from '@mui/material';
 import axios from 'axios';
 
-const RegisterPage = () => {
+const RequestAccountPage = () => {
     const [formState, setFormState] = useState({
         username: '',
         email: '',
-        password: '',
-        confirmPassword: '',
         firstName: '',
-        lastName: ''
+        lastName: '',
+        reason: ''
     });
     const [loading, setLoading] = useState(false);
     const notify = useNotify();
-    const redirect = useRedirect();
 
     const handleChange = (e: { target: { name: any; value: any; }; }) => {
         setFormState({
@@ -27,40 +25,24 @@ const RegisterPage = () => {
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
 
-        if (formState.password !== formState.confirmPassword) {
-            notify('Passwords do not match', { type: 'error' });
-            return;
-        }
-
         setLoading(true);
         try {
-            // Add logging to see what's happening
-            console.log('Submitting registration data to backend');
+            await axios.post('http://localhost:3001/account-requests', formState);
 
-            const response = await axios.post('http://localhost:3001/auth/register', {
-                username: formState.username,
-                email: formState.email,
-                password: formState.password,
-                firstName: formState.firstName,
-                lastName: formState.lastName
+            notify('Your account request has been submitted! An administrator will review it soon.', { type: 'success' });
+            // Clear the form
+            setFormState({
+                username: '',
+                email: '',
+                firstName: '',
+                lastName: '',
+                reason: ''
             });
-
-            console.log('Registration response:', response.data);
-
-            notify('Registration successful! You can now log in.', { type: 'success' });
-            redirect('/login');
-        } catch (error: unknown) {
-            console.error('Registration error:', error);
-
-            if (error && typeof error === 'object' && 'response' in error) {
-                const errorResponse = (error as any).response;
-                notify(
-                    errorResponse?.data?.message ||
-                    'Registration failed. Please try again or contact support.',
-                    { type: 'error' }
-                );
+        } catch (error:unknown) {
+            if (axios.isAxiosError(error)) {
+                notify(`Error: ${error.response?.data.message}`, { type: 'error' });
             } else {
-                notify('Registration failed. Please check your network connection.', { type: 'error' });
+                notify('An unexpected error occurred. Please try again later.', { type: 'error' });
             }
         } finally {
             setLoading(false);
@@ -71,7 +53,10 @@ const RegisterPage = () => {
         <Container maxWidth="sm" sx={{ mt: 8 }}>
             <Paper elevation={3} sx={{ p: 4 }}>
                 <Typography variant="h4" component="h1" align="center" gutterBottom>
-                    Create an Account
+                    Request an Account
+                </Typography>
+                <Typography variant="body1" align="center" sx={{ mb: 3 }}>
+                    Fill out this form to request an account. An administrator will review your request.
                 </Typography>
 
                 <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
@@ -80,9 +65,8 @@ const RegisterPage = () => {
                         required
                         fullWidth
                         id="username"
-                        label="Username"
+                        label="Desired Username"
                         name="username"
-                        autoComplete="username"
                         value={formState.username}
                         onChange={handleChange}
                     />
@@ -93,7 +77,7 @@ const RegisterPage = () => {
                         id="email"
                         label="Email Address"
                         name="email"
-                        autoComplete="email"
+                        type="email"
                         value={formState.email}
                         onChange={handleChange}
                     />
@@ -121,22 +105,12 @@ const RegisterPage = () => {
                         margin="normal"
                         required
                         fullWidth
-                        name="password"
-                        label="Password"
-                        type="password"
-                        id="password"
-                        value={formState.password}
-                        onChange={handleChange}
-                    />
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="confirmPassword"
-                        label="Confirm Password"
-                        type="password"
-                        id="confirmPassword"
-                        value={formState.confirmPassword}
+                        id="reason"
+                        label="Reason for Account Request"
+                        name="reason"
+                        multiline
+                        rows={4}
+                        value={formState.reason}
                         onChange={handleChange}
                     />
                     <Button
@@ -146,7 +120,7 @@ const RegisterPage = () => {
                         sx={{ mt: 3, mb: 2 }}
                         disabled={loading}
                     >
-                        {loading ? 'Registering...' : 'Register'}
+                        {loading ? 'Submitting...' : 'Submit Request'}
                     </Button>
                     <Box sx={{ textAlign: 'center', mt: 2 }}>
                         <Typography variant="body2">
@@ -162,4 +136,4 @@ const RegisterPage = () => {
     );
 };
 
-export default RegisterPage;
+export default RequestAccountPage;

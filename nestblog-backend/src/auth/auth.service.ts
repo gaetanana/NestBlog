@@ -1,17 +1,15 @@
-// Nouveau src/auth/auth.service.ts simplifié
+// src/auth/auth.service.ts - Fixed version
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
 
 @Injectable()
 export class AuthService {
-  private readonly KEYCLOAK_TOKEN_URL =
-    'http://localhost:8080/realms/NestBlog/protocol/openid-connect/token';
-  private readonly KEYCLOAK_REGISTER_URL =
-    'http://localhost:8080/realms/NestBlog/protocol/openid-connect/registrations';
+  private readonly KEYCLOAK_URL = 'http://localhost:8080';
+  private readonly REALM = 'NestBlog';
+  private readonly KEYCLOAK_TOKEN_URL = `${this.KEYCLOAK_URL}/realms/${this.REALM}/protocol/openid-connect/token`;
+  private readonly KEYCLOAK_REGISTER_URL = `${this.KEYCLOAK_URL}/realms/${this.REALM}/protocol/openid-connect/registrations`;
   private readonly clientId = 'nestblog-backend';
   private readonly clientSecret = 'peCGb3FZtMUm7bU7As0OPbkXNY98r2hT';
-  KEYCLOAK_URL: any;
-  REALM: any;
 
   async login(usernameOrEmail: string, password: string) {
     try {
@@ -42,8 +40,7 @@ export class AuthService {
 
   async register(userData: any) {
     try {
-      // Instead of using the KEYCLOAK_REGISTER_URL endpoint (which might not be enabled)
-      // Let's use the admin API to create the user
+      // Get admin token for creating the user
       const token = await this.getAdminToken();
 
       // Prepare the user data for Keycloak
@@ -62,6 +59,11 @@ export class AuthService {
         ],
       };
 
+      console.log(
+        'Creating user in Keycloak with data:',
+        JSON.stringify(keycloakUserData),
+      );
+
       // Create the user in Keycloak using the admin API
       await axios.post(
         `${this.KEYCLOAK_URL}/admin/realms/${this.REALM}/users`,
@@ -74,6 +76,8 @@ export class AuthService {
         },
       );
 
+      console.log('User created successfully, logging in');
+
       // After registration, login the user
       return this.login(userData.username, userData.password);
     } catch (err) {
@@ -85,7 +89,6 @@ export class AuthService {
     }
   }
 
-  // Add getAdminToken method if not already present
   private async getAdminToken() {
     try {
       const params = new URLSearchParams();
@@ -94,7 +97,7 @@ export class AuthService {
       params.append('grant_type', 'client_credentials');
 
       const response = await axios.post(
-        `${this.KEYCLOAK_URL}/realms/${this.REALM}/protocol/openid-connect/token`,
+        this.KEYCLOAK_TOKEN_URL,
         params.toString(),
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

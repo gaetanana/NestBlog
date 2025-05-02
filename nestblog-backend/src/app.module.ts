@@ -12,6 +12,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { AccountRequestsModule } from './account-requests/account-requests.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    AccountRequestsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -41,4 +43,4 @@ import { AuthModule } from './auth/auth.module';
     },
   ],
 })
-export class AppModule {} 
+export class AppModule {}

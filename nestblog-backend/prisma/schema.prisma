@@ -69,3 +69,17 @@ model Comment {
   parent    Comment? @relation("CommentToComment", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentToComment")
 }
+
+model AccountRequest {
+  id          String    @id @default(uuid())
+  username    String
+  email       String
+  firstName   String?
+  lastName    String?
+  reason      String?
+  status      String    @default("pending") // "pending", "approved", "rejected"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  approvedBy  String?
+  approvedAt  DateTime?
+}

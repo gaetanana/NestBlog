@@ -3,6 +3,7 @@ import { DataProvider } from "react-admin";
 
 const apiUrl = "http://localhost:3001";
 
+// Fonction helper pour obtenir les en-têtes d'authentification
 const getAuthHeader = () => {
   const auth = localStorage.getItem("auth");
   if (!auth) throw new Error("No access token");
@@ -13,22 +14,34 @@ const getAuthHeader = () => {
   };
 };
 
-export const dataProvider: DataProvider = {
+// Extension du DataProvider avec des méthodes personnalisées
+interface CustomDataProvider extends DataProvider {
+  approveAccountRequest: (id: string) => Promise<{ data: any }>;
+  rejectAccountRequest: (id: string) => Promise<{ data: any }>;
+}
+
+// Gestion générique des erreurs pour les requêtes
+const handleApiError = async (
+  response: Response,
+  resourceName: string
+): Promise<never> => {
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(errorData.message || `Error with ${resourceName}`);
+};
+
+export const dataProvider: CustomDataProvider = {
   getList: async (resource) => {
     try {
-      console.log(`Fetching list of ${resource}...`);
       const res = await fetch(`${apiUrl}/${resource}`, {
         headers: getAuthHeader(),
       });
-  
+
       if (!res.ok) {
-        console.error(`Error fetching ${resource}:`, res.status, res.statusText);
-        throw new Error(`Error fetching ${resource}: ${res.statusText}`);
+        return handleApiError(res, resource);
       }
-  
+
       const data = await res.json();
-      console.log(`Fetched ${data.length} ${resource}`, data);
-  
+
       return {
         data,
         total: data.length,
@@ -49,13 +62,11 @@ export const dataProvider: DataProvider = {
         throw new Error("Unauthorized");
       } else if (res.status === 404) {
         throw new Error(`${resource} not found`);
-      } else {
-        throw new Error(`Error fetching ${resource}: ${res.statusText}`);
       }
+      return handleApiError(res, resource);
     }
 
     const data = await res.json();
-
     return { data };
   },
 
@@ -67,8 +78,7 @@ export const dataProvider: DataProvider = {
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error creating ${resource}`);
+      return handleApiError(res, resource);
     }
 
     const data = await res.json();
@@ -83,8 +93,7 @@ export const dataProvider: DataProvider = {
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error updating ${resource}`);
+      return handleApiError(res, resource);
     }
 
     const data = await res.json();
@@ -98,15 +107,14 @@ export const dataProvider: DataProvider = {
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error deleting ${resource}`);
+      return handleApiError(res, resource);
     }
 
     const data = await res.json();
     return { data };
   },
 
-  // Standard methods
+  // Méthodes standard de react-admin
   getMany: async (resource, params) => {
     const queryString = params.ids.map((id) => `id=${id}`).join("&");
     const url = `${apiUrl}/${resource}?${queryString}`;
@@ -116,7 +124,7 @@ export const dataProvider: DataProvider = {
     });
 
     if (!res.ok) {
-      throw new Error(`Error fetching multiple ${resource}: ${res.statusText}`);
+      return handleApiError(res, resource);
     }
 
     const data = await res.json();
@@ -124,7 +132,7 @@ export const dataProvider: DataProvider = {
   },
 
   getManyReference: async (resource, params) => {
-    const { target, id, pagination, sort, filter } = params;
+    const { target, id } = params;
     const url = `${apiUrl}/${resource}?${target}=${id}`;
 
     const res = await fetch(url, {
@@ -132,9 +140,7 @@ export const dataProvider: DataProvider = {
     });
 
     if (!res.ok) {
-      throw new Error(
-        `Error fetching referenced ${resource}: ${res.statusText}`
-      );
+      return handleApiError(res, resource);
     }
 
     const data = await res.json();
@@ -181,90 +187,34 @@ export const dataProvider: DataProvider = {
     return { data: params.ids };
   },
 
-  // User Management specific methods
-  updateUserIdentity: async (userId: any, data: any) => {
-    try {
-      const res = await fetch(`${apiUrl}/users/${userId}/identity`, {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify(data),
-      });
+  // Méthodes personnalisées pour les demandes de compte
+  approveAccountRequest: async (id) => {
+    const res = await fetch(`${apiUrl}/account-requests/${id}/approve`, {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({}),
+    });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to update user identity");
-      }
-
-      const responseData = await res.json();
-      return { data: responseData };
-    } catch (error) {
-      console.error("Error updating user identity:", error);
-      throw error;
+    if (!res.ok) {
+      return handleApiError(res, "account request approval");
     }
+
+    const data = await res.json();
+    return { data };
   },
 
-  changeUserPassword: async (userId: any, password: any) => {
-    try {
-      const res = await fetch(`${apiUrl}/users/${userId}/password`, {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({ password }),
-      });
+  rejectAccountRequest: async (id) => {
+    const res = await fetch(`${apiUrl}/account-requests/${id}/reject`, {
+      method: "PATCH",
+      headers: getAuthHeader(),
+      body: JSON.stringify({}),
+    });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to change password");
-      }
-
-      const responseData = await res.json();
-      return { data: responseData };
-    } catch (error) {
-      console.error("Error changing password:", error);
-      throw error;
+    if (!res.ok) {
+      return handleApiError(res, "account request rejection");
     }
-  },
 
-  // New method for enabling/disabling users
-  updateUserStatus: async (userId: any, enabled: any) => {
-    try {
-      const res = await fetch(`${apiUrl}/users/${userId}/status`, {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({ enabled }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to update user status");
-      }
-
-      const responseData = await res.json();
-      return { data: responseData };
-    } catch (error) {
-      console.error("Error updating user status:", error);
-      throw error;
-    }
-  },
-
-  // New method for managing user roles
-  updateUserRoles: async (userId: any, roles: any) => {
-    try {
-      const res = await fetch(`${apiUrl}/users/${userId}/roles`, {
-        method: "PATCH",
-        headers: getAuthHeader(),
-        body: JSON.stringify({ roles }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to update user roles");
-      }
-
-      const responseData = await res.json();
-      return { data: responseData };
-    } catch (error) {
-      console.error("Error updating user roles:", error);
-      throw error;
-    }
+    const data = await res.json();
+    return { data };
   },
 };
