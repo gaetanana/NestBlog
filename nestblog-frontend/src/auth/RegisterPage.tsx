@@ -34,7 +34,10 @@ const RegisterPage = () => {
 
         setLoading(true);
         try {
-            await axios.post('http://localhost:3000/auth/register', {
+            // Add logging to see what's happening
+            console.log('Submitting registration data');
+
+            const response = await axios.post('http://localhost:3000/auth/register', {
                 username: formState.username,
                 email: formState.email,
                 password: formState.password,
@@ -42,13 +45,22 @@ const RegisterPage = () => {
                 lastName: formState.lastName
             });
 
+            console.log('Registration response:', response.data);
+
             notify('Registration successful! You can now log in.', { type: 'success' });
             redirect('/login');
         } catch (error: unknown) {
+            console.error('Registration error:', error);
+
             if (error && typeof error === 'object' && 'response' in error) {
-                notify((error as any).response?.data?.message || 'Registration failed', { type: 'error' });
+                const errorResponse = (error as any).response;
+                notify(
+                    errorResponse?.data?.message ||
+                    'Registration failed. Please try again or contact support.',
+                    { type: 'error' }
+                );
             } else {
-                notify('Registration failed', { type: 'error' });
+                notify('Registration failed. Please check your network connection.', { type: 'error' });
             }
         } finally {
             setLoading(false);

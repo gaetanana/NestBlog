@@ -10,6 +10,7 @@ import { Layout } from './layout/Layout';
 import LoginPage from './auth/LoginPage';
 import RegisterPage from './auth/RegisterPage';
 import { Route } from 'react-router-dom';
+import { UserProfile } from './resources/users/UserProfile';
 
 export const App = () => {
   return (
@@ -22,6 +23,7 @@ export const App = () => {
     >
       <CustomRoutes>
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/users/me" element={<UserProfile />} />
       </CustomRoutes>
 
       {permissions => (

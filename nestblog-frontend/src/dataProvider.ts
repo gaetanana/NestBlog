@@ -15,20 +15,28 @@ const getAuthHeader = () => {
 
 export const dataProvider: DataProvider = {
   getList: async (resource) => {
-    const res = await fetch(`${apiUrl}/${resource}`, {
-      headers: getAuthHeader(),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Error fetching ${resource}: ${res.statusText}`);
+    try {
+      console.log(`Fetching list of ${resource}...`);
+      const res = await fetch(`${apiUrl}/${resource}`, {
+        headers: getAuthHeader(),
+      });
+  
+      if (!res.ok) {
+        console.error(`Error fetching ${resource}:`, res.status, res.statusText);
+        throw new Error(`Error fetching ${resource}: ${res.statusText}`);
+      }
+  
+      const data = await res.json();
+      console.log(`Fetched ${data.length} ${resource}`, data);
+  
+      return {
+        data,
+        total: data.length,
+      };
+    } catch (error) {
+      console.error(`Error in getList for ${resource}:`, error);
+      throw error;
     }
-
-    const data = await res.json();
-
-    return {
-      data,
-      total: data.length,
-    };
   },
 
   getOne: async (resource, params) => {

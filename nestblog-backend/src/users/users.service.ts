@@ -25,14 +25,29 @@ export class UsersService {
     });
 
     if (!user) {
+      // Format the name properly
+      let formattedName = keycloakUser.name;
+
+      // If there's no name but there are first and last names
+      if (
+        !formattedName &&
+        (keycloakUser.given_name || keycloakUser.family_name)
+      ) {
+        formattedName =
+          `${keycloakUser.given_name || ''} ${keycloakUser.family_name || ''}`.trim();
+      }
+
+      // Use username as fallback
+      if (!formattedName) {
+        formattedName = keycloakUser.preferred_username;
+      }
+
       user = await this.prisma.user.create({
         data: {
           id: keycloakUser.sub,
           username: keycloakUser.preferred_username,
           email: keycloakUser.email,
-          name:
-            keycloakUser.name ||
-            `${keycloakUser.given_name || ''} ${keycloakUser.family_name || ''}`.trim(),
+          name: formattedName,
         },
       });
     }

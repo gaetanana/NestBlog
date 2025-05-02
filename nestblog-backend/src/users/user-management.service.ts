@@ -151,15 +151,20 @@ export class UserManagementService {
       return user;
     }
 
-    // If not found, create the user
+    // If not found, create the user with properly formatted name
     console.log(`Creating new user from Keycloak: ${username}`);
+    const name =
+      payload.name ||
+      (payload.given_name && payload.family_name
+        ? `${payload.given_name} ${payload.family_name}`
+        : payload.preferred_username);
+
     return this.prisma.user.create({
       data: {
         id: keycloakId,
         username: username,
         email: payload.email,
-        name:
-          payload.name || `${payload.given_name} ${payload.family_name}`.trim(),
+        name: name,
       },
     });
   }
