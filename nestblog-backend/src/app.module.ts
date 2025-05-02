@@ -1,9 +1,9 @@
+// src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import {
   KeycloakConnectModule,
   AuthGuard,
-  ResourceGuard,
   RoleGuard,
 } from 'nest-keycloak-connect';
 import { APP_GUARD } from '@nestjs/core';
@@ -12,7 +12,6 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { RolesModule } from './roles/roles.module'; // Nouveau module
 
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { RolesModule } from './roles/roles.module'; // Nouveau module
     }),
     UsersModule,
     AuthModule,
-    RolesModule, 
   ],
   controllers: [AppController],
   providers: [
@@ -43,4 +41,4 @@ import { RolesModule } from './roles/roles.module'; // Nouveau module
     },
   ],
 })
-export class AppModule {}
+export class AppModule {} 

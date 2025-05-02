@@ -1,53 +1,53 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+//  src/users/users.service.ts simplifié
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { User } from '@prisma/client';
+import type { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  // CRUD basique pour PostgreSQL
   async findAll(): Promise<User[]> {
     return this.prisma.user.findMany();
   }
 
   async findOne(id: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  async findByUsername(username: string): Promise<User> {
+    return this.prisma.user.findUnique({ where: { username } });
+  }
+
+  async findOrCreateFromKeycloak(keycloakUser: any): Promise<User> {
+    let user = await this.prisma.user.findUnique({
+      where: { id: keycloakUser.sub },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          id: keycloakUser.sub,
+          username: keycloakUser.preferred_username,
+          email: keycloakUser.email,
+          name:
+            keycloakUser.name ||
+            `${keycloakUser.given_name || ''} ${keycloakUser.family_name || ''}`.trim(),
+        },
+      });
+    }
+
     return user;
   }
 
-  async updateAppData(id: string, data: { [key: string]: any }): Promise<User> {
-    const userExists = await this.prisma.user.findUnique({ where: { id } });
-    if (!userExists) throw new NotFoundException('User not found');
-
-    // Exclure les champs d'identité
-    const { username, email, password, roles, ...appData } = data;
-
+  async update(id: string, data: Partial<User>): Promise<User> {
     return this.prisma.user.update({
       where: { id },
-      data: appData,
+      data,
     });
   }
 
-  async removeFromApp(id: string): Promise<User> {
-    const userExists = await this.prisma.user.findUnique({ where: { id } });
-    if (!userExists) throw new NotFoundException('User not found');
-
+  async remove(id: string): Promise<User> {
     return this.prisma.user.delete({ where: { id } });
-  }
-
-  // Méthode utilitaire pour créer un utilisateur dans PostgreSQL
-  async createUserInDB(userData: {
-    id: string;
-    username: string;
-    email: string;
-    name?: string;
-  }): Promise<User> {
-    return this.prisma.user.create({
-      data: {
-        ...userData,
-      },
-    });
   }
 }

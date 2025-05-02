@@ -12,6 +12,7 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
+    "@prisma/client": "^6.7.0",
     "ldapjs": "^3.0.7"
   }
 }
