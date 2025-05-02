@@ -1,7 +1,7 @@
 // src/dataProvider.ts
 import { DataProvider } from "react-admin";
 
-const apiUrl = "http://localhost:3000";
+const apiUrl = "http://localhost:3001";
 
 const getAuthHeader = () => {
   const auth = localStorage.getItem("auth");
