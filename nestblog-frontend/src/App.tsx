@@ -8,12 +8,38 @@ import authProvider from './authProvider';
 import { dataProvider } from './dataProvider';
 import { MyAppBar } from './resources/appBar/MyAppBar';
 import LoginPage from './components/Login';
+import { useState, useEffect } from 'react';
 
 // Icons
 import PeopleIcon from '@mui/icons-material/People';
 
 export const App = () => {
-  const isAdmin = authProvider.hasAdmin();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Vérifier les rôles à l'initialisation
+    authProvider.getPermissions()
+      .then((permissions) => {
+        setIsAdmin(Array.isArray(permissions) && permissions.includes('admin'));
+      })
+      .catch(() => setIsAdmin(false));
+
+    // Écouter les changements d'authentification
+    const checkAuthInterval = setInterval(() => {
+      authProvider.checkAuth()
+        .then(() => {
+          authProvider.getPermissions()
+            .then((permissions) => {
+              setIsAdmin(Array.isArray(permissions) && permissions.includes('admin'));
+            });
+        })
+        .catch(() => {
+          setIsAdmin(false);
+        });
+    }, 5000); 
+
+    return () => clearInterval(checkAuthInterval);
+  }, []);
 
   return (
     <Admin
@@ -31,7 +57,6 @@ export const App = () => {
         icon={PeopleIcon}
         options={{ label: 'Users' }}
       />
-      {/* Tes autres ressources ici */}
     </Admin>
   );
 };

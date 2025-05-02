@@ -22,7 +22,7 @@ const MyUserMenu = (props: any) => {
         <UserMenu {...props}>
             {userId && (
                 <MenuItemLink
-                    to={`/users/${userId}/show`}
+                    to={`/users/${userId}`}
                     primaryText="Mon profil"
                     leftIcon={<AccountCircle />}
                 />

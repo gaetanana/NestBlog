@@ -32,6 +32,8 @@ const authProvider = {
     localStorage.setItem("auth", JSON.stringify(data));
 
     const payload = JSON.parse(atob(data.accessToken.split(".")[1]));
+    console.log("Token payload:", payload);
+    console.log("Roles:", payload.realm_access?.roles);
     currentRoles = payload.realm_access?.roles || [];
 
     return Promise.resolve();
