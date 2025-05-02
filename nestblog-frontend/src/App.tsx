@@ -1,27 +1,37 @@
 // src/App.tsx
 import { Admin, Resource, Layout } from 'react-admin';
-import { UserCreate } from './ressources/users/UserCreate';
-import { UserEdit } from './ressources/users/UserEdit';
-import { UserList } from './ressources/users/UserList';
-import { UserShow } from './ressources/users/UserShow';
+import { UserCreate } from './resources/users/UserCreate';
+import { UserEdit } from './resources/users/UserEdit';
+import { UserList } from './resources/users/UserList';
+import { UserShow } from './resources/users/UserShow';
 import authProvider from './authProvider';
 import { dataProvider } from './dataProvider';
-import { MyAppBar } from './ressources/appBar/MyAppBar';
+import { MyAppBar } from './resources/appBar/MyAppBar';
 import LoginPage from './components/Login';
 
-export const App = () => (
-  <Admin
-    authProvider={authProvider}
-    dataProvider={dataProvider}
-    layout={(props) => <Layout {...props} appBar={MyAppBar} />}
-    loginPage={LoginPage}
-  >
-    <Resource
-      name="users"
-      list={authProvider.hasAdmin() ? UserList : undefined}
-      show={UserShow}
-      edit={UserEdit}
-      create={authProvider.hasAdmin() ? UserCreate : undefined}
-    />
-  </Admin>
-);
+// Icons
+import PeopleIcon from '@mui/icons-material/People';
+
+export const App = () => {
+  const isAdmin = authProvider.hasAdmin();
+
+  return (
+    <Admin
+      authProvider={authProvider}
+      dataProvider={dataProvider}
+      layout={(props) => <Layout {...props} appBar={MyAppBar} />}
+      loginPage={LoginPage}
+    >
+      <Resource
+        name="users"
+        list={isAdmin ? UserList : undefined}
+        show={UserShow}
+        edit={UserEdit}
+        create={isAdmin ? UserCreate : undefined}
+        icon={PeopleIcon}
+        options={{ label: 'Users' }}
+      />
+      {/* Tes autres ressources ici */}
+    </Admin>
+  );
+};
