@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UsersService } from './users.service';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
@@ -14,7 +13,6 @@ export class UserManagementService {
 
   constructor(
     private prisma: PrismaService,
-    private usersService: UsersService,
     private configService: ConfigService,
   ) {
     this.KEYCLOAK_URL = 'http://localhost:8080';
@@ -23,7 +21,6 @@ export class UserManagementService {
     this.CLIENT_SECRET = 'peCGb3FZtMUm7bU7As0OPbkXNY98r2hT';
   }
 
-  // Méthode pour obtenir un token admin
   private async getAdminToken() {
     try {
       const params = new URLSearchParams();
@@ -46,7 +43,69 @@ export class UserManagementService {
     }
   }
 
-  // Méthode déplacée depuis UsersService
+  async createUser(userData: any) {
+    try {
+      // 1. Créer l'utilisateur dans Keycloak/LDAP
+      const token = await this.getAdminToken();
+
+      const keycloakUserData = {
+        username: userData.username,
+        email: userData.email,
+        firstName: userData.firstName || userData.name?.split(' ')[0] || '',
+        lastName:
+          userData.lastName ||
+          userData.name?.split(' ').slice(1).join(' ') ||
+          '',
+        enabled: true,
+        credentials: [
+          {
+            type: 'password',
+            value: userData.password,
+            temporary: false,
+          },
+        ],
+      };
+
+      // Création dans Keycloak
+      const response = await axios.post(
+        `${this.KEYCLOAK_URL}/admin/realms/${this.REALM}/users`,
+        keycloakUserData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      // Récupérer l'ID de l'utilisateur créé
+      const locationHeader = response.headers.location;
+      const userId = locationHeader.substring(
+        locationHeader.lastIndexOf('/') + 1,
+      );
+
+      // 2. Créer l'utilisateur dans la base de données locale
+      const { password, ...userDataWithoutPassword } = userData;
+
+      return this.prisma.user.create({
+        data: {
+          id: userId,
+          username: userData.username,
+          email: userData.email,
+          name:
+            userData.name ||
+            `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        },
+      });
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new Error('Failed to create user');
+    }
+  }
+
+  /**
+   * Trouve ou crée un utilisateur basé sur les informations Keycloak
+   */
   async findOrCreateFromKeycloak(payload: any): Promise<User> {
     if (!payload || !payload.preferred_username) {
       throw new Error('Invalid Keycloak payload');
@@ -74,35 +133,40 @@ export class UserManagementService {
 
     // Si non trouvé, créer l'utilisateur
     console.log(`Creating new user from Keycloak: ${username}`);
-    return this.usersService.createUserInDB({
-      id: keycloakId,
-      username: username,
-      email: payload.email,
-      name:
-        payload.name ||
-        `${payload.given_name || ''} ${payload.family_name || ''}`.trim(),
+    return this.prisma.user.create({
+      data: {
+        id: keycloakId,
+        username: username,
+        email: payload.email,
+        name:
+          payload.name || `${payload.given_name} ${payload.family_name}`.trim(),
+      },
     });
   }
 
-  // Méthode déplacée depuis UsersService
+  /**
+   * Récupère l'utilisateur actuel avec ses données complètes (pour profil utilisateur)
+   */
   async getCurrentUserProfile(keycloakPayload: any): Promise<any> {
     const user = await this.findOrCreateFromKeycloak(keycloakPayload);
 
+    // Ici, vous pouvez enrichir l'utilisateur avec des données supplémentaires
+    // spécifiques à votre application
     const userData = {
       ...user,
       roles: keycloakPayload.realm_access?.roles || [],
+      // Autres données spécifiques à l'application
     };
 
     return userData;
   }
 
-  // Méthode pour mettre à jour un utilisateur dans Keycloak/LDAP
   async updateUser(userId: string, userData: any) {
     try {
       // 1. Mettre à jour l'utilisateur dans Keycloak
       const token = await this.getAdminToken();
 
-      // Préparer les données pour Keycloak
+      // Préparer les données pour Keycloak (identité utilisateur)
       const keycloakUserData = {
         firstName: userData.firstName || userData.name?.split(' ')[0],
         lastName:
@@ -112,7 +176,7 @@ export class UserManagementService {
         enabled: true,
       };
 
-      // Mise à jour dans Keycloak
+      // Mise à jour de l'utilisateur dans Keycloak (et donc aussi dans LDAP)
       await axios.put(
         `${this.KEYCLOAK_URL}/admin/realms/${this.REALM}/users/${userId}`,
         keycloakUserData,
@@ -124,51 +188,48 @@ export class UserManagementService {
         },
       );
 
-      // 2. Mise à jour dans PostgreSQL
+      // 2. Mise à jour des données spécifiques à l'application dans PostgreSQL
+      // (exclure les champs d'identité qui sont gérés par Keycloak/LDAP)
       const { username, email, password, firstName, lastName, ...appData } =
         userData;
 
-      // Vérifier si l'utilisateur existe dans PostgreSQL
+      // Si l'utilisateur n'existe pas encore dans PostgreSQL, le créer
       const existingUser = await this.prisma.user.findUnique({
         where: { id: userId },
       });
 
       if (!existingUser) {
-        // Créer l'utilisateur s'il n'existe pas
-        return this.usersService.createUserInDB({
-          id: userId,
-          username: userData.username,
-          email: userData.email,
-          name:
-            userData.name ||
-            `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        return this.prisma.user.create({
+          data: {
+            id: userId,
+            username: userData.username,
+            email: userData.email,
+            name:
+              userData.name ||
+              `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+          },
         });
       }
 
-      // Mettre à jour les champs d'identité dans PostgreSQL
-      const updatedUser = await this.prisma.user.update({
+      // Mettre à jour l'utilisateur existant
+      return this.prisma.user.update({
         where: { id: userId },
         data: {
-          username: userData.username,
-          email: userData.email,
-          name:
-            userData.name ||
-            `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+          ...appData,
+          name: userData.name,
         },
       });
-
-      return updatedUser;
     } catch (error) {
       console.error('Error updating user:', error);
       throw new Error('Failed to update user');
     }
   }
 
-  // Méthode pour changer le mot de passe
   async changePassword(userId: string, newPassword: string) {
     try {
       const token = await this.getAdminToken();
 
+      // Changer le mot de passe dans Keycloak
       await axios.put(
         `${this.KEYCLOAK_URL}/admin/realms/${this.REALM}/users/${userId}/reset-password`,
         {

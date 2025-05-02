@@ -29,3 +29,7 @@ Commande pour copier le realm en local
 
 docker cp nestblog-keycloak:/opt/keycloak/data/import/NestBlog-realm.json ./keycloak/realms/NestBlog-realm.json
 
+Commande pour créer une migration prisma : 
+
+se rendre dans le dossier ou il y a le fichier schema.prisma.
+executer cette commande : 

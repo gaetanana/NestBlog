@@ -54,6 +54,20 @@
       "containerId" : "d0a24aa8-d4b2-4350-abe2-fac5e9a09792",
       "attributes" : { }
     }, {
+      "id" : "852e84cd-5cda-460b-b608-6ec2c63f9178",
+      "name" : "admin",
+      "description" : "Administrator role with full system access",
+      "composite" : true,
+      "composites" : {
+        "client" : {
+          "realm-management" : [ "view-realm", "view-users", "manage-users", "manage-realm", "query-users" ],
+          "nestblog-backend" : [ "user" ]
+        }
+      },
+      "clientRole" : false,
+      "containerId" : "d0a24aa8-d4b2-4350-abe2-fac5e9a09792",
+      "attributes" : { }
+    }, {
       "id" : "1b5a780c-e8a1-4284-a3e3-201030f7bdc6",
       "name" : "offline_access",
       "description" : "${role_offline-access}",
@@ -70,6 +84,19 @@
         "realm" : [ "offline_access", "uma_authorization" ],
         "client" : {
           "account" : [ "manage-account", "view-profile" ]
+        }
+      },
+      "clientRole" : false,
+      "containerId" : "d0a24aa8-d4b2-4350-abe2-fac5e9a09792",
+      "attributes" : { }
+    }, {
+      "id" : "db97eb7b-a1a6-4828-8bbc-8c05a211b60c",
+      "name" : "user",
+      "description" : "Standard user role with limited permissions",
+      "composite" : true,
+      "composites" : {
+        "client" : {
+          "account" : [ "delete-account", "manage-account", "view-profile" ]
         }
       },
       "clientRole" : false,
@@ -335,8 +362,22 @@
       "nestblog-backend" : [ {
         "id" : "c3245955-34eb-4aa5-aea1-6affd11207a2",
         "name" : "user",
-        "description" : "",
-        "composite" : false,
+        "description" : "Standard user role with limited permissions",
+        "composite" : true,
+        "composites" : {
+          "realm" : [ "user" ]
+        },
+        "clientRole" : true,
+        "containerId" : "34d3a6a4-cd4e-4457-b9d0-feee8affa6df",
+        "attributes" : { }
+      }, {
+        "id" : "84599717-67ba-4493-a62b-9768d23d641d",
+        "name" : "admin",
+        "description" : "Administrator role for the application",
+        "composite" : true,
+        "composites" : {
+          "realm" : [ "admin" ]
+        },
         "clientRole" : true,
         "containerId" : "34d3a6a4-cd4e-4457-b9d0-feee8affa6df",
         "attributes" : { }
@@ -385,7 +426,7 @@
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
   "users" : [ {
-    "id" : "c9334822-b4f9-4566-814e-31904d0a0c44",
+    "id" : "84169821-3ff6-4097-bd70-2ed52cf6f430",
     "username" : "jane.doe",
     "firstName" : "Jane Doe",
     "lastName" : "Doe",
@@ -393,34 +434,11 @@
     "emailVerified" : false,
     "attributes" : {
       "LDAP_ENTRY_DN" : [ "uid=jane.doe,dc=nestblog,dc=local" ],
-      "modifyTimestamp" : [ "20250325182432Z" ],
-      "createTimestamp" : [ "20250325182432Z" ],
-      "LDAP_ID" : [ "243d6884-9df2-103f-8e96-11f584096a0c" ]
+      "modifyTimestamp" : [ "20250502092244Z" ],
+      "createTimestamp" : [ "20250502092244Z" ],
+      "LDAP_ID" : [ "bfe9439a-bb82-103f-80bd-814344b1f3d9" ]
     },
-    "createdTimestamp" : 1743179699523,
-    "enabled" : true,
-    "totp" : false,
-    "federationLink" : "4b49945f-5ada-4b7a-9cd2-9a41b7843da0",
-    "credentials" : [ ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-nestblog" ],
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
-    "id" : "96b9485d-e8b8-4bec-b48f-f55b59bfcc77",
-    "username" : "john.doe",
-    "firstName" : "John Doe",
-    "lastName" : "Doe",
-    "email" : "john.doe@nestblog.local",
-    "emailVerified" : false,
-    "attributes" : {
-      "LDAP_ENTRY_DN" : [ "uid=john.doe,dc=nestblog,dc=local" ],
-      "modifyTimestamp" : [ "20250325182432Z" ],
-      "createTimestamp" : [ "20250325182432Z" ],
-      "LDAP_ID" : [ "243cded2-9df2-103f-8e95-11f584096a0c" ]
-    },
-    "createdTimestamp" : 1743179699511,
+    "createdTimestamp" : 1746179915204,
     "enabled" : true,
     "totp" : false,
     "federationLink" : "4b49945f-5ada-4b7a-9cd2-9a41b7843da0",
@@ -430,6 +448,50 @@
     "realmRoles" : [ "default-roles-nestblog" ],
     "clientRoles" : {
       "nestblog-backend" : [ "user" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "c303e754-8d27-4ecf-8beb-5dc732d4fa4b",
+    "username" : "john.doe",
+    "firstName" : "John Doe",
+    "lastName" : "Doe",
+    "email" : "john.doe@nestblog.local",
+    "emailVerified" : false,
+    "attributes" : {
+      "LDAP_ENTRY_DN" : [ "uid=john.doe,dc=nestblog,dc=local" ],
+      "modifyTimestamp" : [ "20250502100032Z" ],
+      "createTimestamp" : [ "20250502092244Z" ],
+      "LDAP_ID" : [ "bfe82078-bb82-103f-80bc-814344b1f3d9" ]
+    },
+    "createdTimestamp" : 1746178714994,
+    "enabled" : true,
+    "totp" : false,
+    "federationLink" : "4b49945f-5ada-4b7a-9cd2-9a41b7843da0",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-nestblog" ],
+    "clientRoles" : {
+      "nestblog-backend" : [ "admin" ]
+    },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "058c9918-931b-4d85-b78e-eb40f701af15",
+    "username" : "service-account-nestblog-backend",
+    "emailVerified" : false,
+    "createdTimestamp" : 1746179017368,
+    "enabled" : true,
+    "totp" : false,
+    "serviceAccountClientId" : "nestblog-backend",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-nestblog" ],
+    "clientRoles" : {
+      "realm-management" : [ "view-realm", "view-users", "manage-users", "view-identity-providers" ],
+      "account" : [ "delete-account", "manage-account", "manage-account-links", "view-profile" ]
     },
     "notBefore" : 0,
     "groups" : [ ]
@@ -590,7 +652,7 @@
     "standardFlowEnabled" : true,
     "implicitFlowEnabled" : false,
     "directAccessGrantsEnabled" : true,
-    "serviceAccountsEnabled" : false,
+    "serviceAccountsEnabled" : true,
     "publicClient" : false,
     "frontchannelLogout" : true,
     "protocol" : "openid-connect",
@@ -598,6 +660,7 @@
       "oidc.ciba.grant.enabled" : "false",
       "client.secret.creation.time" : "1743179474",
       "backchannel.logout.session.required" : "true",
+      "post.logout.redirect.uris" : "+",
       "oauth2.device.authorization.grant.enabled" : "false",
       "display.on.consent.screen" : "false",
       "backchannel.logout.revoke.offline.tokens" : "false"
@@ -605,6 +668,49 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
+    "protocolMappers" : [ {
+      "id" : "b80146d3-2c96-4d7c-bcf4-32aa5086d2a8",
+      "name" : "Client ID",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usersessionmodel-note-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "user.session.note" : "client_id",
+        "introspection.token.claim" : "true",
+        "id.token.claim" : "true",
+        "access.token.claim" : "true",
+        "claim.name" : "client_id",
+        "jsonType.label" : "String"
+      }
+    }, {
+      "id" : "84cce90a-65f7-4b40-a40e-2bea2b67545b",
+      "name" : "Client IP Address",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usersessionmodel-note-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "user.session.note" : "clientAddress",
+        "introspection.token.claim" : "true",
+        "id.token.claim" : "true",
+        "access.token.claim" : "true",
+        "claim.name" : "clientAddress",
+        "jsonType.label" : "String"
+      }
+    }, {
+      "id" : "e5e669ed-7adb-4802-9ad3-f472d4dc8a87",
+      "name" : "Client Host",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usersessionmodel-note-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "user.session.note" : "clientHost",
+        "introspection.token.claim" : "true",
+        "id.token.claim" : "true",
+        "access.token.claim" : "true",
+        "claim.name" : "clientHost",
+        "jsonType.label" : "String"
+      }
+    } ],
     "defaultClientScopes" : [ "web-origins", "acr", "roles", "profile", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
   }, {
@@ -1230,7 +1336,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-address-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "oidc-usermodel-property-mapper", "saml-role-list-mapper", "oidc-full-name-mapper", "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-full-name-mapper", "saml-user-attribute-mapper", "oidc-usermodel-property-mapper", "saml-user-property-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper" ]
       }
     }, {
       "id" : "0d0a619e-825f-41e3-9dd4-0798818a1162",
@@ -1248,7 +1354,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "saml-role-list-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "oidc-full-name-mapper", "saml-user-attribute-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "oidc-full-name-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "saml-role-list-mapper" ]
       }
     }, {
       "id" : "b85fb65c-4f2a-489c-b577-f7630328d750",
@@ -1280,8 +1386,8 @@
           "config" : {
             "ldap.attribute" : [ "uid" ],
             "is.mandatory.in.ldap" : [ "true" ],
-            "read.only" : [ "true" ],
             "always.read.value.from.ldap" : [ "false" ],
+            "read.only" : [ "true" ],
             "user.model.attribute" : [ "username" ]
           }
         }, {
@@ -1316,8 +1422,8 @@
           "config" : {
             "ldap.attribute" : [ "sn" ],
             "is.mandatory.in.ldap" : [ "true" ],
-            "read.only" : [ "true" ],
             "always.read.value.from.ldap" : [ "true" ],
+            "read.only" : [ "true" ],
             "user.model.attribute" : [ "lastName" ]
           }
         }, {
@@ -1347,8 +1453,8 @@
         } ]
       },
       "config" : {
-        "fullSyncPeriod" : [ "-1" ],
         "pagination" : [ "false" ],
+        "fullSyncPeriod" : [ "-1" ],
         "startTls" : [ "false" ],
         "connectionPooling" : [ "false" ],
         "usersDn" : [ "dc=nestblog,dc=local" ],
@@ -1356,15 +1462,15 @@
         "useKerberosForPasswordAuthentication" : [ "false" ],
         "importEnabled" : [ "true" ],
         "enabled" : [ "true" ],
-        "usernameLDAPAttribute" : [ "uid" ],
-        "changedSyncPeriod" : [ "-1" ],
-        "bindDn" : [ "cn=admin,dc=nestblog,dc=local" ],
         "bindCredential" : [ "adminpassword" ],
+        "bindDn" : [ "cn=admin,dc=nestblog,dc=local" ],
+        "changedSyncPeriod" : [ "-1" ],
+        "usernameLDAPAttribute" : [ "uid" ],
         "lastSync" : [ "1742926860" ],
         "vendor" : [ "other" ],
         "uuidLDAPAttribute" : [ "entryUUID" ],
-        "connectionUrl" : [ "ldap://ldap:389" ],
         "allowKerberosAuthentication" : [ "false" ],
+        "connectionUrl" : [ "ldap://ldap:389" ],
         "syncRegistrations" : [ "true" ],
         "authType" : [ "simple" ],
         "krbPrincipalAttribute" : [ "krb5PrincipalName" ],

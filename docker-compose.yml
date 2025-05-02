@@ -16,7 +16,7 @@ services:
 
   ldap:
     build:
-      context: ./ldap
+      context: osixia/openldap:1.5.0
     container_name: nestblog-ldap
     environment:
       LDAP_ORGANISATION: "NestBlog"
@@ -43,8 +43,6 @@ services:
       - ./keycloak/realms:/opt/keycloak/data/import
     depends_on:
       - ldap
-
-
 
 volumes:
   postgres_data:

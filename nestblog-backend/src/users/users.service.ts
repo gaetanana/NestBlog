@@ -47,7 +47,6 @@ export class UsersService {
     return this.prisma.user.create({
       data: {
         ...userData,
-        password: '', // Mot de passe stocké dans Keycloak/LDAP
       },
     });
   }
