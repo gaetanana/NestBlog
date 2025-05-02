@@ -1,9 +1,9 @@
 // src/resources/users/UserCreate.tsx
 import { useCallback } from 'react';
-import { 
-  Create, 
-  SimpleForm, 
-  TextInput, 
+import {
+  Create,
+  SimpleForm,
+  TextInput,
   PasswordInput,
   required,
   email,
@@ -23,7 +23,7 @@ const validatePassword = [required(), minLength(8)];
 const validateName = [required()];
 
 // Custom toolbar
-const CreateToolbar = (props) => (
+const CreateToolbar = (props: any) => (
   <Toolbar {...props}>
     <SaveButton label="Create User" />
   </Toolbar>
@@ -34,11 +34,11 @@ export const UserCreate = () => {
   const redirect = useRedirect();
   const dataProvider = useDataProvider();
 
-  const handleSubmit = useCallback(async (values) => {
+  const handleSubmit = useCallback(async (values: any) => {
     try {
       // Extract data from form
       const { username, email, password, name, ...rest } = values;
-      
+
       // Prepare data for API
       const userData = {
         username,
@@ -48,13 +48,13 @@ export const UserCreate = () => {
         enabled: true,
         ...rest
       };
-      
+
       // Create user through the dataProvider
       const response = await dataProvider.create('users', { data: userData });
-      
+
       notify('User created successfully', { type: 'success' });
       redirect('show', 'users', response.data.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
       notify(`Error: ${error?.message || 'Failed to create user'}`, { type: 'error' });
     }
@@ -62,7 +62,7 @@ export const UserCreate = () => {
 
   return (
     <Create>
-      <SimpleForm 
+      <SimpleForm
         onSubmit={handleSubmit}
         toolbar={<CreateToolbar />}
         warnWhenUnsavedChanges
@@ -73,24 +73,24 @@ export const UserCreate = () => {
         <Alert severity="info" sx={{ mb: 3 }}>
           Create a new user account. All fields marked with * are required.
         </Alert>
-        
+
         <Typography variant="h6" gutterBottom>
           Authentication Information
         </Typography>
         <Box sx={{ mb: 3 }}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <TextInput 
-                source="username" 
-                fullWidth 
+              <TextInput
+                source="username"
+                fullWidth
                 validate={validateUsername}
                 helperText="Username must be at least 3 characters"
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextInput 
-                source="email" 
-                fullWidth 
+              <TextInput
+                source="email"
+                fullWidth
                 validate={validateEmail}
                 helperText="Enter a valid email address"
               />
@@ -105,18 +105,18 @@ export const UserCreate = () => {
             </Grid>
           </Grid>
         </Box>
-        
+
         <Divider sx={{ my: 3 }} />
-        
+
         <Typography variant="h6" gutterBottom>
           Profile Information
         </Typography>
         <Box sx={{ mb: 3 }}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <TextInput 
-                source="name" 
-                fullWidth 
+              <TextInput
+                source="name"
+                fullWidth
                 validate={validateName}
                 helperText="Enter the user's full name"
               />

@@ -13,9 +13,9 @@ import {
   TopToolbar,
   ExportButton,
   useGetIdentity,
+  FunctionField
 } from 'react-admin';
 import { FC } from 'react';
-import { Box, Chip } from '@mui/material';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockIcon from '@mui/icons-material/Lock';
 import { User } from '../../types';
@@ -56,9 +56,6 @@ export const UserList = () => {
   const isAdmin = identity?.role === 'admin' ||
     (identity?.roles && Array.isArray(identity.roles) && identity.roles.includes('admin'));
 
-  // Custom renderer function
-  const statusRenderer = (record: User) => <UserStatusField record={record} />;
-
   return (
     <List
       filters={UserFilters}
@@ -70,7 +67,14 @@ export const UserList = () => {
         <TextField source="username" />
         <EmailField source="email" />
         <TextField source="name" />
-        {statusRenderer}
+        <FunctionField
+          label="Status"
+          render={(record: User) => (
+            record.enabled === false ?
+              <LockIcon color="error" titleAccess="Disabled" /> :
+              <LockOpenIcon color="success" titleAccess="Active" />
+          )}
+        />
         <DateField source="createdAt" label="Joined date" />
         <ShowButton />
         <EditButton />

@@ -84,6 +84,12 @@ const TabPanel = (props: TabPanelProps) => {
   );
 };
 
+// Titre pour l'Edit
+const UserEditTitle = () => {
+  const record = useRecordContext<User>();
+  return <span>Edit User: {record?.name || record?.username}</span>;
+};
+
 export const UserEdit = () => {
   const dataProvider = useDataProvider();
   const redirect = useRedirect();
@@ -159,7 +165,7 @@ export const UserEdit = () => {
 
   return (
     <Edit
-      title={record => `Edit User: ${record?.name || record?.username}`}
+      title={<UserEditTitle />}
       mutationMode="pessimistic"
     >
       <Box>
